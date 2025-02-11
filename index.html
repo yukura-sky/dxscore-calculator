@@ -3,9 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="reset.css">
+  <link rel="stylesheet" href="style.css">
   <title>calc</title>
 </head>
 <body>
-  test
+  <header class="site-header">
+    <div>
+      <p>でらすこ計算機β</p>
+    </div>
+  </header>
+
+  <div class="input_area">
+    <p>ノーツ数</p>
+    <input type="text" id="num_notes">
+    <input type="button" id="submit_button" onclick="calc()" value="計算"> 
+  </div>
+
+  <div>
+    <table class="table_design">
+      <thead>
+        <tr>
+          <th></th>
+          <th>でらスコ</th>
+          <th>許容ノーツ数<br>(PREFECT)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>理論値</th>
+          <td id="score_max" class="score"></td>
+          <td id="kyoyo_max" class="kyoyo"></td>
+        </tr>
+        <tr>
+          <th>★6</th>
+          <td id="score_6" class="score"></td>
+          <td id="kyoyo_6" class="kyoyo"></td>
+        </tr>
+        <tr>
+          <th>★5</th>
+          <td id="score_5" class="score"></td>
+          <td id="kyoyo_5" class="kyoyo"></td>
+        </tr>
+        <tr>
+          <th>★4</th>
+          <td id="score_4" class="score"></td>
+          <td id="kyoyo_4" class="kyoyo"></td>
+        </tr>
+        <tr>
+          <th>★3</th>
+          <td id="score_3" class="score"></td>
+          <td id="kyoyo_3" class="kyoyo"></td>
+        </tr>
+        <tr>
+          <th>★2</th>
+          <td id="score_2" class="score"></td>
+          <td id="kyoyo_2" class="kyoyo"></td>
+        </tr>
+        <tr>
+          <th>★1</th>
+          <td id="score_1" class="score"></td>
+          <td id="kyoyo_1" class="kyoyo"></td>
+        </tr>
+      </tbody>
+    </table>
+</div>
 </body>
+
+<footer></footer>
+
+<script>
+const ZERO = 0;
+const MAX_NUM = 3;
+const PER_6 = 0.99;
+const PER_5 = 0.97;
+const PER_4 = 0.95;
+const PER_3 = 0.93;
+const PER_2 = 0.90;
+const PER_1 = 0.85;
+
+let submit_button = document.getElementById('submit_button');
+
+  var calc = function(){
+    let num_notes = document.getElementById('num_notes').value;
+    let max_dx_score = num_notes * MAX_NUM;
+
+    let score_max = Math.ceil(max_dx_score);
+    let score_6 = Math.ceil(max_dx_score* PER_6);
+    let score_5 = Math.ceil(max_dx_score* PER_5);
+    let score_4 = Math.ceil(max_dx_score * PER_4);
+    let score_3 = Math.ceil(max_dx_score * PER_3);
+    let score_2 = Math.ceil(max_dx_score * PER_2);
+    let score_1 = Math.ceil(max_dx_score * PER_1);
+
+    let kyoyo_max = ZERO;
+    let kyoyo_6 = max_dx_score - score_6;
+    let kyoyo_5 = max_dx_score - score_5;
+    let kyoyo_4 = max_dx_score - score_4;
+    let kyoyo_3 = max_dx_score - score_3;
+    let kyoyo_2 = max_dx_score - score_2;
+    let kyoyo_1 = max_dx_score - score_1;
+
+    console.log(max_dx_score);
+    console.log(score_1);
+
+    let element_score_max = document.getElementById('score_max');
+    element_score_max.textContent = score_max;
+    let element_score_6 = document.getElementById('score_6');
+    element_score_6.textContent = score_6;
+    let element_score_5 = document.getElementById('score_5');
+    element_score_5.textContent = score_5;
+    let element_score_4 = document.getElementById('score_4');
+    element_score_4.textContent = score_4;
+    let element_score_3 = document.getElementById('score_3');
+    element_score_3.textContent = score_3;
+    let element_score_2 = document.getElementById('score_2');
+    element_score_2.textContent = score_2;
+    let element_score_1 = document.getElementById('score_1');
+    element_score_1.textContent = score_1;
+
+    let element_kyoyo_max = document.getElementById('kyoyo_max');
+    element_kyoyo_max.textContent = kyoyo_max;
+    let element_kyoyo_6 = document.getElementById('kyoyo_6');
+    element_kyoyo_6.textContent = kyoyo_6;
+    let element_kyoyo_5 = document.getElementById('kyoyo_5');
+    element_kyoyo_5.textContent = kyoyo_5;
+    let element_kyoyo_4 = document.getElementById('kyoyo_4');
+    element_kyoyo_4.textContent = kyoyo_4;
+    let element_kyoyo_3 = document.getElementById('kyoyo_3');
+    element_kyoyo_3.textContent = kyoyo_3;
+    let element_kyoyo_2 = document.getElementById('kyoyo_2');
+    element_kyoyo_2.textContent = kyoyo_2;
+    let element_kyoyo_1 = document.getElementById('kyoyo_1');
+    element_kyoyo_1.textContent = kyoyo_1;
+  };
+</script>
+
 </html>

@@ -1,0 +1,42 @@
+/* ヘッダデザイン */
+.site-header {
+  position: relative;
+  background-color: #26b3fc; 
+  height: 60px;
+  line-height: 60px;
+}
+.site-header div {
+  margin-left: 20px;
+} 
+.site-header p {
+  font-weight: bold;
+  font-size: 20px;
+  vertical-align: middle;
+  color: #fff; }
+ 
+
+/* テーブルデザイン */
+.table_design {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 700px;
+}
+.table_design thead tr th {
+  background-color: #26b3fc;
+  color: #fff;
+}
+.table_design tr {
+  background-color: #e6f1f6;
+}
+.table_design tr:nth-child(odd) {
+  background-color: #fff;
+}
+.table_design th, .table_design td {
+  padding: 1em;
+}
+.table_design th {
+  font-weight: bold;
+  text-align: center;
+  width: 20%;
+  min-width: 4em;
+}

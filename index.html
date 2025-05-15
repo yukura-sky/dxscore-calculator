@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="reset.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <title>calc</title>
 </head>
-<body>
+<body class="section">
   <header class="site-header">
     <div>
       <p>でらすこ計算機β</p>
@@ -68,7 +67,32 @@
       </tbody>
     </table>
 </div>
-</body>
+
+  <div class="container" id="app">
+    <h1 class="title">楽曲からノーツ数を探す</h1>
+
+    <div class="field">
+      <label class="label">検索</label>
+      <div class="control">
+        <input v-model="keyword" class="input" type="text" placeholder="キーワードを入力">
+      </div>
+    </div>
+
+    <table class="table is-striped is-fullwidth" v-if="filteredData.length">
+      <thead>
+        <tr>
+          <th v-for="key in headers" :key="key">{{ key }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, i) in filteredData" :key="i">
+          <td v-for="key in headers" :key="key">{{ row[key] }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p v-else>該当データがありません。</p>
+  </div>
 
 <footer></footer>
 
@@ -139,4 +163,5 @@ let submit_button = document.getElementById('submit_button');
   };
 </script>
 
+</body>
 </html>

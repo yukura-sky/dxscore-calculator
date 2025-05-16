@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <title>calc</title>
 </head>
 <body class="section">
@@ -66,7 +67,7 @@
         </tr>
       </tbody>
     </table>
-</div>
+  </div>
 
   <div class="container" id="app">
     <h1 class="title">楽曲からノーツ数を探す</h1>
@@ -97,16 +98,17 @@
 <footer></footer>
 
 <script>
-const ZERO = 0;
-const MAX_NUM = 3;
-const PER_6 = 0.99;
-const PER_5 = 0.97;
-const PER_4 = 0.95;
-const PER_3 = 0.93;
-const PER_2 = 0.90;
-const PER_1 = 0.85;
+  //でらスコ計算ロジック
+  const ZERO = 0;
+  const MAX_NUM = 3;
+  const PER_6 = 0.99;
+  const PER_5 = 0.97;
+  const PER_4 = 0.95;
+  const PER_3 = 0.93;
+  const PER_2 = 0.90;
+  const PER_1 = 0.85;
 
-let submit_button = document.getElementById('submit_button');
+  let submit_button = document.getElementById('submit_button');
 
   var calc = function(){
     let num_notes = document.getElementById('num_notes').value;
@@ -127,9 +129,6 @@ let submit_button = document.getElementById('submit_button');
     let kyoyo_3 = max_dx_score - score_3;
     let kyoyo_2 = max_dx_score - score_2;
     let kyoyo_1 = max_dx_score - score_1;
-
-    console.log(max_dx_score);
-    console.log(score_1);
 
     let element_score_max = document.getElementById('score_max');
     element_score_max.textContent = score_max;
@@ -161,6 +160,35 @@ let submit_button = document.getElementById('submit_button');
     let element_kyoyo_1 = document.getElementById('kyoyo_1');
     element_kyoyo_1.textContent = kyoyo_1;
   };
+
+  //楽曲検索ロジック
+  Vue.createApp({
+    data() {
+      return {
+        rawData: [],
+        keyword: '',
+        displayColumns: ['title', 'version', 'lev_mas', 'lev_mas_notes', 'lev_exp', 'lev_exp_notes', 'lev_adv', 'lev_adv_notes', 'lev_bas', 'lev_bas_notes']
+      };
+    },
+    computed: {
+      headers() {
+        return this.displayColumns;
+      },
+      filteredData() {
+        const kw = this.keyword.toLowerCase();
+        return this.rawData.filter(row =>
+          Object.values(row).some(val =>
+            String(val).toLowerCase().includes(kw)
+          )
+        );
+      }
+    },
+    async mounted() {
+      const res = await fetch("data/music-ex.json");
+      this.rawData = await res.json();
+    }
+  }).mount('#app');
+
 </script>
 
 </body>

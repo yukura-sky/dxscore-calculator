@@ -7,159 +7,142 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <title>calc</title>
 </head>
-<body class="section">
-  <header class="site-header">
-    <div>
-      <p>でらすこ計算機β</p>
-    </div>
-  </header>
-
-  <div class="input_area">
-    <p>ノーツ数</p>
-    <input type="text" id="num_notes">
-    <input type="button" id="submit_button" onclick="calc()" value="計算"> 
-  </div>
-
+<body>
+<header class="site-header">
   <div>
-    <table class="table_design">
+    <p>でらすこ計算機β</p>
+  </div>
+</header>
+
+<div id="calcApp" class="section">
+  <div class="container">
+    <h1 class="title">ノーツ数からでらスコを計算</h1>
+    <!-- 入力エリア -->
+    <div class="field">
+      <label class="label">ノーツ数：</label>
+      <div class="control">
+        <input type="number" class="input" v-model="numNotes" min="1" max="9999" placeholder="例：500 もしくは、楽曲からノーツ数を探す" @input="validateInput">
+      </div>
+      <p class="help is-danger" v-if="errorMessage">{{ errorMessage }}</p>
+      <div class="control mt-3">
+        <button class="button is-primary" @click="calculate" :disabled="!isValid">計算</button>
+      </div>
+    </div>
+
+    <!-- 結果テーブル -->
+    <table class="table is-bordered is-striped is-fullwidth mt-5" v-if="Object.keys(results).length">
       <thead>
         <tr>
           <th></th>
           <th>でらスコ</th>
-          <th>許容ノーツ数<br>(PREFECT)</th>
+          <th>許容ノーツ数（PERFECT）</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <th>理論値</th>
-          <td id="score_max" class="score"></td>
-          <td id="kyoyo_max" class="kyoyo"></td>
-        </tr>
-        <tr>
-          <th>★6</th>
-          <td id="score_6" class="score"></td>
-          <td id="kyoyo_6" class="kyoyo"></td>
-        </tr>
-        <tr>
-          <th>★5</th>
-          <td id="score_5" class="score"></td>
-          <td id="kyoyo_5" class="kyoyo"></td>
-        </tr>
-        <tr>
-          <th>★4</th>
-          <td id="score_4" class="score"></td>
-          <td id="kyoyo_4" class="kyoyo"></td>
-        </tr>
-        <tr>
-          <th>★3</th>
-          <td id="score_3" class="score"></td>
-          <td id="kyoyo_3" class="kyoyo"></td>
-        </tr>
-        <tr>
-          <th>★2</th>
-          <td id="score_2" class="score"></td>
-          <td id="kyoyo_2" class="kyoyo"></td>
-        </tr>
-        <tr>
-          <th>★1</th>
-          <td id="score_1" class="score"></td>
-          <td id="kyoyo_1" class="kyoyo"></td>
+        <tr v-for="(result, label) in results" :key="label">
+          <th>{{ label }}</th>
+          <td>{{ result.score }}</td>
+          <td>{{ result.tolerance }}</td>
         </tr>
       </tbody>
     </table>
+
   </div>
+</div>
 
-  <div class="container" id="app">
-    <h1 class="title">楽曲からノーツ数を探す</h1>
+<div class="container" id="searchApp">
+  <h1 class="title">楽曲からノーツ数を探す</h1>
 
-    <div class="field">
-      <label class="label">検索</label>
-      <div class="control">
-        <input v-model="keyword" class="input" type="text" placeholder="キーワードを入力">
-      </div>
+  <div class="field">
+    <label class="label">検索</label>
+    <div class="control">
+      <input v-model="keyword" class="input" type="text" placeholder="楽曲名を入力（一部でも可）" @input="validateSearchInput">
     </div>
-
-    <table class="table is-striped is-fullwidth" v-if="filteredData.length">
-      <thead>
-        <tr>
-          <th v-for="key in headers" :key="key">{{ key }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(row, i) in filteredData" :key="i">
-          <td v-for="key in headers" :key="key">{{ row[key] }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <p v-else>該当データがありません。</p>
+    <p class="help is-danger" v-if="errorMessage">{{ searchError }}</p>
   </div>
+
+  <table class="table is-striped is-fullwidth" v-if="filteredData.length">
+    <thead>
+      <tr>
+        <th v-for="key in headers" :key="key">{{ key }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(row, i) in filteredData" :key="i">
+        <td v-for="key in headers" :key="key">{{ row[key] }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p v-else>該当データがありません。</p>
+</div>
+
 
 <footer></footer>
 
+
 <script>
   //でらスコ計算ロジック
-  const ZERO = 0;
-  const MAX_NUM = 3;
-  const PER_6 = 0.99;
-  const PER_5 = 0.97;
-  const PER_4 = 0.95;
-  const PER_3 = 0.93;
-  const PER_2 = 0.90;
-  const PER_1 = 0.85;
+  Vue.createApp({
+  data() {
+    return {
+      numNotes: null,
+      maxPerNote: 3,
+      precisionLevels: {
+        '理論値': 1.00,
+        '★6': 0.99,
+        '★5': 0.97,
+        '★4': 0.95,
+        '★3': 0.93,
+        '★2': 0.90,
+        '★1': 0.85,
+      },
+      results: {},
+      errorMessage: ''
+    };
+  },
+  computed: {
+    isValid() {
+    const value = Number(this.numNotes);
+    return (
+      this.errorMessage === '' &&
+      Number.isInteger(value) &&
+      value >= 1 &&
+      value <= 9999
+    );
+  }
+  },
+  methods: {
+    validateInput() {
+      const value = Number(this.numNotes);
+      if (
+        isNaN(value) ||
+        !Number.isInteger(value) ||
+        value < 1 ||
+        value > 9999
+      ) {
+        this.errorMessage = '1〜9999の整数を入力してください';
+        this.results = {};
+      } else {
+        this.errorMessage = '';
+      }
+    },
+    calculate() {
+      if (this.errorMessage) return;
 
-  let submit_button = document.getElementById('submit_button');
+      const baseScore = this.numNotes * this.maxPerNote;
+      const resultSet = {};
 
-  var calc = function(){
-    let num_notes = document.getElementById('num_notes').value;
-    let max_dx_score = num_notes * MAX_NUM;
+      for (const [label, rate] of Object.entries(this.precisionLevels)) {
+        const score = Math.ceil(baseScore * rate);
+        const tolerance = Math.ceil(baseScore - score);
+        resultSet[label] = { score, tolerance };
+      }
 
-    let score_max = Math.ceil(max_dx_score);
-    let score_6 = Math.ceil(max_dx_score* PER_6);
-    let score_5 = Math.ceil(max_dx_score* PER_5);
-    let score_4 = Math.ceil(max_dx_score * PER_4);
-    let score_3 = Math.ceil(max_dx_score * PER_3);
-    let score_2 = Math.ceil(max_dx_score * PER_2);
-    let score_1 = Math.ceil(max_dx_score * PER_1);
-
-    let kyoyo_max = ZERO;
-    let kyoyo_6 = max_dx_score - score_6;
-    let kyoyo_5 = max_dx_score - score_5;
-    let kyoyo_4 = max_dx_score - score_4;
-    let kyoyo_3 = max_dx_score - score_3;
-    let kyoyo_2 = max_dx_score - score_2;
-    let kyoyo_1 = max_dx_score - score_1;
-
-    let element_score_max = document.getElementById('score_max');
-    element_score_max.textContent = score_max;
-    let element_score_6 = document.getElementById('score_6');
-    element_score_6.textContent = score_6;
-    let element_score_5 = document.getElementById('score_5');
-    element_score_5.textContent = score_5;
-    let element_score_4 = document.getElementById('score_4');
-    element_score_4.textContent = score_4;
-    let element_score_3 = document.getElementById('score_3');
-    element_score_3.textContent = score_3;
-    let element_score_2 = document.getElementById('score_2');
-    element_score_2.textContent = score_2;
-    let element_score_1 = document.getElementById('score_1');
-    element_score_1.textContent = score_1;
-
-    let element_kyoyo_max = document.getElementById('kyoyo_max');
-    element_kyoyo_max.textContent = kyoyo_max;
-    let element_kyoyo_6 = document.getElementById('kyoyo_6');
-    element_kyoyo_6.textContent = kyoyo_6;
-    let element_kyoyo_5 = document.getElementById('kyoyo_5');
-    element_kyoyo_5.textContent = kyoyo_5;
-    let element_kyoyo_4 = document.getElementById('kyoyo_4');
-    element_kyoyo_4.textContent = kyoyo_4;
-    let element_kyoyo_3 = document.getElementById('kyoyo_3');
-    element_kyoyo_3.textContent = kyoyo_3;
-    let element_kyoyo_2 = document.getElementById('kyoyo_2');
-    element_kyoyo_2.textContent = kyoyo_2;
-    let element_kyoyo_1 = document.getElementById('kyoyo_1');
-    element_kyoyo_1.textContent = kyoyo_1;
-  };
+      this.results = resultSet;
+    }
+  }
+}).mount('#calcApp');
 
   //楽曲検索ロジック
   Vue.createApp({
@@ -167,7 +150,9 @@
       return {
         rawData: [],
         keyword: '',
-        displayColumns: ['title', 'version', 'lev_mas', 'lev_mas_notes', 'lev_exp', 'lev_exp_notes', 'lev_adv', 'lev_adv_notes', 'lev_bas', 'lev_bas_notes']
+        displayColumns: ['title', 'version', 'lev_mas', 'lev_mas_notes', 'lev_exp', 'lev_exp_notes', 'lev_adv', 'lev_adv_notes', 'lev_bas', 'lev_bas_notes'],
+        keyword: '',
+        searchError: '',
       };
     },
     computed: {
@@ -175,6 +160,8 @@
         return this.displayColumns;
       },
       filteredData() {
+        if (this.searchError) return []; // エラー時は表示しない
+        
         const kw = this.keyword.toLowerCase();
         return this.rawData.filter(row =>
           Object.values(row).some(val =>
@@ -183,12 +170,65 @@
         );
       }
     },
+    methods: {
+      validateSearchInput() {
+        const trimmed = this.keyword.trim();
+
+        // 空またはスペースだけ
+        if (!trimmed) {
+          this.searchError = '検索キーワードを入力してください。';
+          return false;
+        }
+
+        // 簡単なスクリプト・インジェクション対策
+        const dangerousPattern = /<script.*?>|<\/script>|['";]/i;
+        if (dangerousPattern.test(trimmed)) {
+          this.searchError = '不正な文字列が含まれています。';
+          return false;
+        }
+
+        this.searchError = '';
+        return true;
+      },
+      formatValue(col, val) {
+        if (col === 'version') {
+          return this.versionMap[val] || val;
+        }
+        return val;
+      }
+    },
+    versionMap: {
+      "10000": "maimai",
+      "11000": "maimai PLUS",
+      "12000": "GreeN",
+      "13000": "GreeN PLUS",
+      "14000": "ORANGE",
+      "15000": "ORANGE PLUS",
+      "16000": "PiNK",
+      "17000": "PiNK PLUS",
+      "18000": "MURASAKi",
+      "18500": "MURASAKi PLUS",
+      "19000": "MiLK",
+      "19500": "MiLK PLUS",
+      "19900": "FiNALE",
+      "20000": "でらっくす",
+      "20500": "でらっくす PLUS",
+      "21000": "Splash",
+      "21500": "Splash PLUS",
+      "22000": "UNiVERSE",
+      "22500": "UNiVERSE PLUS",
+      "23000": "FESTiVAL",
+      "23500": "FESTiVAL PLUS",
+      "24000": "BUDDiES",
+      "24500": "BUDDiES PLUS",
+      "25000": "PRiSM",
+      "25500": "PRiSM PLUS"
+    },
     async mounted() {
       const res = await fetch("data/music-ex.json");
       this.rawData = await res.json();
     }
-  }).mount('#app');
-
+  }).mount('#searchApp');
 </script>
 
 </body>

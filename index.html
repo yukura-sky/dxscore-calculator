@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="css/style.css">
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <title>calc</title>
 </head>
@@ -30,22 +31,24 @@
     </div>
 
     <!-- 結果テーブル -->
-    <table class="table is-bordered is-striped is-fullwidth mt-5" v-if="Object.keys(results).length">
-      <thead>
-        <tr>
-          <th></th>
-          <th>でらスコ</th>
-          <th>許容ノーツ数（PERFECT）</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(result, label) in results" :key="label">
-          <th>{{ label }}</th>
-          <td>{{ result.score }}</td>
-          <td>{{ result.tolerance }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="scrollable-table mt-5" v-if="Object.keys(results).length">
+      <table class="table is-bordered is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th class="fixed-title"></th>
+            <th class="narrow-column">でらスコ</th>
+            <th class="narrow-column">許容ノーツ数（PERFECT）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(result, label) in results" :key="label">
+            <th class="fixed-title">{{ label }}</th>
+            <td class="narrow-column">{{ result.score }}</td>
+            <td class="narrow-column">{{ result.tolerance }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
   </div>
 </div>
@@ -61,18 +64,24 @@
     <p class="help is-danger" v-if="errorMessage">{{ searchError }}</p>
   </div>
 
-  <table class="table is-striped is-fullwidth" v-if="filteredData.length">
-    <thead>
-      <tr>
-        <th v-for="key in headers" :key="key">{{ key }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="(row, i) in filteredData" :key="i">
-        <td v-for="key in headers" :key="key">{{ row[key] }}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="scrollable-table" v-if="filteredData.length">
+    <table class="table is-striped is-fullwidth">
+      <thead>
+        <tr>
+          <th v-for="(key, i) in headers" :key="key" :class="i === 0 ? 'fixed-title' : ''">
+            {{ headerLabels[key] || key }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, i) in filteredData" :key="i">
+          <td v-for="(key, j) in headers" :key="key" :class="j === 0 ? 'fixed-title' : (key.endsWith('_notes') ? 'clickable' : '')" @click="key.endsWith('_notes') && fillNotes(row[key])">
+            {{ key === 'version' ? versionMap[row[key].toString().slice(0, 3) + '00'] || row[key] : row[key] }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
   <p v-else>該当データがありません。</p>
 </div>
@@ -82,35 +91,46 @@
 
 
 <script>
-  //でらスコ計算ロジック
-  Vue.createApp({
-  data() {
-    return {
-      numNotes: null,
-      maxPerNote: 3,
-      precisionLevels: {
-        '理論値': 1.00,
-        '★6': 0.99,
-        '★5': 0.97,
-        '★4': 0.95,
-        '★3': 0.93,
-        '★2': 0.90,
-        '★1': 0.85,
-      },
-      results: {},
-      errorMessage: ''
-    };
-  },
-  computed: {
-    isValid() {
-    const value = Number(this.numNotes);
-    return (
-      this.errorMessage === '' &&
-      Number.isInteger(value) &&
-      value >= 1 &&
-      value <= 9999
-    );
+  //楽曲検索バリデーション
+  function isValidKeyword(input) {
+    const trimmed = input.trim();
+    if (!trimmed) return { valid: false, message: '検索キーワードを入力してください。' };
+    const dangerousPattern = /<script.*?>|<\/script>|['"];]/i;
+    if (dangerousPattern.test(trimmed)) {
+      return { valid: false, message: '不正な文字列が含まれています。' };
+    }
+    return { valid: true, message: '' };
   }
+
+  //でらスコ計算ロジック
+  const calcAppInstance = Vue.createApp({
+    data() {
+      return {
+        numNotes: null,
+        maxPerNote: 3,
+        precisionLevels: {
+          '理論値': 1.00,
+          '★6': 0.99,
+          '★5': 0.97,
+          '★4': 0.95,
+          '★3': 0.93,
+          '★2': 0.90,
+          '★1': 0.85,
+        },
+        results: {},
+        errorMessage: ''
+      };
+    },
+    computed: {
+      isValid() {
+      const value = Number(this.numNotes);
+      return (
+        this.errorMessage === '' &&
+        Number.isInteger(value) &&
+        value >= 1 &&
+        value <= 9999
+      );
+    }
   },
   methods: {
     validateInput() {
@@ -150,8 +170,64 @@
       return {
         rawData: [],
         keyword: '',
-        displayColumns: ['title', 'version', 'lev_mas', 'lev_mas_notes', 'lev_exp', 'lev_exp_notes', 'lev_adv', 'lev_adv_notes', 'lev_bas', 'lev_bas_notes'],
-        keyword: '',
+        displayColumns: [
+          'title', 'version',
+          'lev_mas', 'dx_lev_mas',
+          'lev_mas_notes', 'dx_lev_mas_notes',
+          'lev_exp', 'dx_lev_exp',
+          'lev_exp_notes', 'dx_lev_exp_notes',
+          'lev_adv', 'dx_lev_adv',
+          'lev_adv_notes', 'dx_lev_adv_notes',
+          'lev_bas', 'dx_lev_bas',
+          'lev_bas_notes', 'dx_lev_bas_notes'
+        ],
+        headerLabels: {
+          title: 'タイトル',
+          version: 'バージョン',
+          lev_mas: 'MASTER Lv.',
+          dx_lev_mas: 'MASTER Lv. DX',
+          lev_mas_notes: 'MASTERノーツ数',
+          dx_lev_mas_notes: 'MASTERノーツ数 DX',
+          lev_exp: 'EXPERT Lv.',
+          dx_lev_exp: 'EXPERT Lv. DX',
+          lev_exp_notes: 'EXPERTノーツ数',
+          dx_lev_exp_notes: 'EXPERTノーツ数 DX',
+          lev_adv: 'ADVANCE Lv.',
+          dx_lev_adv: 'ADVANCE Lv. DX',
+          lev_adv_notes: 'ADVANCEノーツ数',
+          dx_lev_adv_notes: 'ADVANCEノーツ数 DX',
+          lev_bas: 'BASIC Lv.',
+          dx_lev_bas: 'BASIC Lv. DX',
+          lev_bas_notes: 'BASICノーツ数',
+          dx_lev_bas_notes: 'BASICノーツ数 DX'
+        },
+        versionMap: {
+          "10000": "maimai",
+          "11000": "maimai PLUS",
+          "12000": "GreeN",
+          "13000": "GreeN PLUS",
+          "14000": "ORANGE",
+          "15000": "ORANGE PLUS",
+          "16000": "PiNK",
+          "17000": "PiNK PLUS",
+          "18000": "MURASAKi",
+          "18500": "MURASAKi PLUS",
+          "19000": "MiLK",
+          "19500": "MiLK PLUS",
+          "19900": "FiNALE",
+          "20000": "でらっくす",
+          "20500": "でらっくす PLUS",
+          "21000": "Splash",
+          "21500": "Splash PLUS",
+          "22000": "UNiVERSE",
+          "22500": "UNiVERSE PLUS",
+          "23000": "FESTiVAL",
+          "23500": "FESTiVAL PLUS",
+          "24000": "BUDDiES",
+          "24500": "BUDDiES PLUS",
+          "25000": "PRiSM",
+          "25500": "PRiSM PLUS"
+        },
         searchError: '',
       };
     },
@@ -172,58 +248,19 @@
     },
     methods: {
       validateSearchInput() {
-        const trimmed = this.keyword.trim();
-
-        // 空またはスペースだけ
-        if (!trimmed) {
-          this.searchError = '検索キーワードを入力してください。';
-          return false;
-        }
-
-        // 簡単なスクリプト・インジェクション対策
-        const dangerousPattern = /<script.*?>|<\/script>|['";]/i;
-        if (dangerousPattern.test(trimmed)) {
-          this.searchError = '不正な文字列が含まれています。';
-          return false;
-        }
-
-        this.searchError = '';
-        return true;
+        const result = isValidKeyword(this.keyword);
+        this.searchError = result.message;
+        return result.valid;
       },
-      formatValue(col, val) {
-        if (col === 'version') {
-          return this.versionMap[val] || val;
-        }
-        return val;
+      fillNotes(noteCount) {
+        if (noteCount == null || isNaN(Number(noteCount))) return;
+
+        const proxy = calcAppInstance;
+        proxy.numNotes = Number(noteCount);
+        proxy.validateInput();
       }
     },
-    versionMap: {
-      "10000": "maimai",
-      "11000": "maimai PLUS",
-      "12000": "GreeN",
-      "13000": "GreeN PLUS",
-      "14000": "ORANGE",
-      "15000": "ORANGE PLUS",
-      "16000": "PiNK",
-      "17000": "PiNK PLUS",
-      "18000": "MURASAKi",
-      "18500": "MURASAKi PLUS",
-      "19000": "MiLK",
-      "19500": "MiLK PLUS",
-      "19900": "FiNALE",
-      "20000": "でらっくす",
-      "20500": "でらっくす PLUS",
-      "21000": "Splash",
-      "21500": "Splash PLUS",
-      "22000": "UNiVERSE",
-      "22500": "UNiVERSE PLUS",
-      "23000": "FESTiVAL",
-      "23500": "FESTiVAL PLUS",
-      "24000": "BUDDiES",
-      "24500": "BUDDiES PLUS",
-      "25000": "PRiSM",
-      "25500": "PRiSM PLUS"
-    },
+
     async mounted() {
       const res = await fetch("data/music-ex.json");
       this.rawData = await res.json();

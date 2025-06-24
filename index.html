@@ -6,26 +6,26 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-  <title>calc</title>
+  <title>簡単でらスコ計算機</title>
 </head>
 <body>
-<header class="site-header">
-  <div>
-    <p>でらすこ計算機β</p>
+<header class="site-header has-background-light p-3">
+  <div class="container">
+    <h1 class="title is-6">maimai 簡易でらすこ計算機</h1>
   </div>
 </header>
 
 <div id="calcApp" class="section">
   <div class="container">
-    <h1 class="title">ノーツ数からでらスコを計算</h1>
+    <h1 class="title">■ノーツ数から計算</h1>
     <!-- 入力エリア -->
     <div class="field">
       <label class="label">ノーツ数：</label>
       <div class="control">
-        <input type="number" class="input" v-model="numNotes" min="1" max="9999" placeholder="例：500 もしくは、楽曲からノーツ数を探す" @input="validateInput">
+        <input type="number" class="input" v-model="numNotes" min="1" max="9999" placeholder="例：500" @input="validateInput">
       </div>
       <p class="help is-danger" v-if="errorMessage">{{ errorMessage }}</p>
-      <div class="control mt-3">
+      <div class="control mt-3 has-text-centered">
         <button class="button is-primary" @click="calculate" :disabled="!isValid">計算</button>
       </div>
     </div>
@@ -36,15 +36,15 @@
         <thead>
           <tr>
             <th class="fixed-title"></th>
-            <th class="narrow-column">でらスコ</th>
-            <th class="narrow-column">許容ノーツ数（PERFECT）</th>
+            <th style="width: 7em;">でらスコ</th>
+            <th style="width: 14em;">許容ノーツ数（PERFECT）</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(result, label) in results" :key="label">
             <th class="fixed-title">{{ label }}</th>
-            <td class="narrow-column">{{ result.score }}</td>
-            <td class="narrow-column">{{ result.tolerance }}</td>
+            <td>{{ result.score }}</td>
+            <td>{{ result.tolerance }}</td>
           </tr>
         </tbody>
       </table>
@@ -53,8 +53,8 @@
   </div>
 </div>
 
-<div class="container" id="searchApp">
-  <h1 class="title">楽曲からノーツ数を探す</h1>
+<div class="section" id="searchApp">
+  <h1 class="title">■楽曲から探す</h1>
 
   <div class="field">
     <label class="label">検索</label>
@@ -87,7 +87,10 @@
 </div>
 
 
-<footer></footer>
+<footer>
+  <p>ご意見・ご連絡は <a href="https://twitter.com/your_account" target="_blank" rel="noopener">@your_account</a> まで</p>
+  <p>&copy; 2025 Delasco Calc. All rights reserved.</p>
+</footer>
 
 
 <script>

@@ -9,9 +9,9 @@
   <title>簡単でらスコ計算機</title>
 </head>
 <body>
-<header class="site-header has-background-light p-3">
+<header class="site-header has-background-primary p-3">
   <div class="container">
-    <h1 class="title is-6">maimai 簡易でらすこ計算機</h1>
+    <h1 class="title is-6 has-text-light">maimai 簡易でらスコ計算機</h1>
   </div>
 </header>
 
@@ -21,18 +21,16 @@
     <!-- 入力エリア -->
     <div class="field">
       <label class="label">ノーツ数：</label>
-      <div class="control">
-        <input type="number" class="input" v-model="numNotes" min="1" max="9999" placeholder="例：500" @input="validateInput">
-      </div>
-      <p class="help is-danger" v-if="errorMessage">{{ errorMessage }}</p>
-      <div class="control mt-3 has-text-centered">
+      <div class="note-input-row">
+        <input type="number" class="input" v-model="numNotes" min="1" max="9999" placeholder="例）500" @input="validateInput">
         <button class="button is-primary" @click="calculate" :disabled="!isValid">計算</button>
       </div>
+      <p class="help is-danger" v-if="errorMessage">{{ errorMessage }}</p>
     </div>
 
     <!-- 結果テーブル -->
     <div class="scrollable-table mt-5" v-if="Object.keys(results).length">
-      <table class="table is-bordered is-striped is-fullwidth">
+      <table class="table is-bordered is-striped is-fullwidth has-text-centered">
         <thead>
           <tr>
             <th class="fixed-title"></th>
@@ -54,10 +52,13 @@
 </div>
 
 <div class="section" id="searchApp">
-  <h1 class="title">■楽曲から探す</h1>
+  <h1 class="title">■楽曲から探して計算</h1>
+  <div class=" mb-1">
+    <p class="is-size-7">下の表で青文字のノーツ数を押すと、<br>
+      自動で上部のボックスに入力されます</p>
+  </div>
 
   <div class="field">
-    <label class="label">検索</label>
     <div class="control">
       <input v-model="keyword" class="input" type="text" placeholder="楽曲名を入力（一部でも可）" @input="validateSearchInput">
     </div>

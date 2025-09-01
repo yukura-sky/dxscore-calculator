@@ -73,7 +73,7 @@
         <thead>
           <tr>
             <th v-for="(key, i) in headers" :key="key" :class="[i === 0 ? 'fixed-title' : 'fixed-header', 'has-background-primary-light']">
-              {{ headerLabels[key] || key }}
+              <span v-html="headerLabels[key] || key"></span>
             </th>
           </tr>
         </thead>
@@ -93,8 +93,11 @@
 
 
 <footer>
+  <p>当ツールは、非公式ファンメイドツールです。maimai公式とは一切関係ございません。</p>
+  <p>また、当ツールには<a href="https://otoge-db.net/" target="_blank" rel="noopener">OTOGE DB</a>様の取得された楽曲データを使用しています。</p>
+  <br>
   <p>ご意見・ご連絡は <a href="https://x.com/araburutochigi" target="_blank" rel="noopener">作者Xアカウント</a> まで</p>
-  <p>&copy; 2025 Delasco Calc. All rights reserved.</p>
+  <p>&copy; 2025 DXScore Calc.</p>
 </footer>
 
 
@@ -179,63 +182,54 @@
         rawData: [],
         keyword: '',
         displayColumns: [
-          'title', 'version',
-          'lev_mas', 'dx_lev_mas',
+          'title',
+          'lev_remas_notes', 'dx_lev_remas_notes',
           'lev_mas_notes', 'dx_lev_mas_notes',
-          'lev_exp', 'dx_lev_exp',
           'lev_exp_notes', 'dx_lev_exp_notes',
-          'lev_adv', 'dx_lev_adv',
           'lev_adv_notes', 'dx_lev_adv_notes',
-          'lev_bas', 'dx_lev_bas',
           'lev_bas_notes', 'dx_lev_bas_notes'
         ],
         headerLabels: {
           title: '楽曲名',
           version: 'バージョン',
-          lev_mas: 'MASTER Lv.',
-          dx_lev_mas: 'MASTER Lv. DX',
-          lev_mas_notes: 'MASTERノーツ数',
-          dx_lev_mas_notes: 'MASTERノーツ数 DX',
-          lev_exp: 'EXPERT Lv.',
-          dx_lev_exp: 'EXPERT Lv. DX',
-          lev_exp_notes: 'EXPERTノーツ数',
-          dx_lev_exp_notes: 'EXPERTノーツ数 DX',
-          lev_adv: 'ADVANCE Lv.',
-          dx_lev_adv: 'ADVANCE Lv. DX',
-          lev_adv_notes: 'ADVANCEノーツ数',
-          dx_lev_adv_notes: 'ADVANCEノーツ数 DX',
-          lev_bas: 'BASIC Lv.',
-          dx_lev_bas: 'BASIC Lv. DX',
-          lev_bas_notes: 'BASICノーツ数',
-          dx_lev_bas_notes: 'BASICノーツ数 DX'
+          lev_remas_notes: 'ReMASTER<br>ノーツ数',
+          dx_lev_remas_notes: 'ReMASTER<br>ノーツ数 DX',
+          lev_mas_notes: 'MASTER<br>ノーツ数',
+          dx_lev_mas_notes: 'MASTER<br>ノーツ数 DX',
+          lev_exp_notes: 'EXPERT<br>ノーツ数',
+          dx_lev_exp_notes: 'EXPERT<br>ノーツ数 DX',
+          lev_adv_notes: 'ADVANCE<br>ノーツ数',
+          dx_lev_adv_notes: 'ADVANCE<br>ノーツ数 DX',
+          lev_bas_notes: 'BASIC<br>ノーツ数',
+          dx_lev_bas_notes: 'BASIC<br>ノーツ数 DX'
         },
-        versionMap: {
-          "10000": "maimai",
-          "11000": "maimai PLUS",
-          "12000": "GreeN",
-          "13000": "GreeN PLUS",
-          "14000": "ORANGE",
-          "15000": "ORANGE PLUS",
-          "16000": "PiNK",
-          "17000": "PiNK PLUS",
-          "18000": "MURASAKi",
-          "18500": "MURASAKi PLUS",
-          "19000": "MiLK",
-          "19500": "MiLK PLUS",
-          "19900": "FiNALE",
-          "20000": "でらっくす",
-          "20500": "でらっくす PLUS",
-          "21000": "Splash",
-          "21500": "Splash PLUS",
-          "22000": "UNiVERSE",
-          "22500": "UNiVERSE PLUS",
-          "23000": "FESTiVAL",
-          "23500": "FESTiVAL PLUS",
-          "24000": "BUDDiES",
-          "24500": "BUDDiES PLUS",
-          "25000": "PRiSM",
-          "25500": "PRiSM PLUS"
-        },
+        // versionMap: {
+        //   "10000": "maimai",
+        //   "11000": "maimai PLUS",
+        //   "12000": "GreeN",
+        //   "13000": "GreeN PLUS",
+        //   "14000": "ORANGE",
+        //   "15000": "ORANGE PLUS",
+        //   "16000": "PiNK",
+        //   "17000": "PiNK PLUS",
+        //   "18000": "MURASAKi",
+        //   "18500": "MURASAKi PLUS",
+        //   "19000": "MiLK",
+        //   "19500": "MiLK PLUS",
+        //   "19900": "FiNALE",
+        //   "20000": "でらっくす",
+        //   "20500": "でらっくす PLUS",
+        //   "21000": "Splash",
+        //   "21500": "Splash PLUS",
+        //   "22000": "UNiVERSE",
+        //   "22500": "UNiVERSE PLUS",
+        //   "23000": "FESTiVAL",
+        //   "23500": "FESTiVAL PLUS",
+        //   "24000": "BUDDiES",
+        //   "24500": "BUDDiES PLUS",
+        //   "25000": "PRiSM",
+        //   "25500": "PRiSM PLUS"
+        // },
         searchError: '',
       };
     },

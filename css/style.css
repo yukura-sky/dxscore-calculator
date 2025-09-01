@@ -115,6 +115,7 @@ table th, table tr {
   text-align: center;
   vertical-align: middle;
   padding: 0.3em 0.5em;
+  word-break: break-all;
 }
 #searchApp .scrollable-table th:not(:first-child),
 #searchApp .scrollable-table td:not(:first-child) {

@@ -11,7 +11,7 @@
 <body>
 <header class="site-header has-background-primary p-3">
   <div class="container">
-    <h1 class="title is-6 has-text-light">maimai 簡易でらスコ計算機</h1>
+    <h1 class="title is-6 has-text-light">maimai 簡単でらスコ計算機 ver1.0</h1>
   </div>
 </header>
 
@@ -33,14 +33,14 @@
       <table class="table is-bordered is-striped is-fullwidth has-text-centered">
         <thead>
           <tr>
-            <th class="fixed-title"></th>
-            <th style="width: 7em;">でらスコ</th>
-            <th style="width: 14em;">許容ノーツ数（PERFECT）</th>
+            <th class="fixed-title has-background-primary-light"></th>
+            <th class="has-background-primary-light">でらスコ</th>
+            <th class="has-background-primary-light">許容ノーツ数<br>（PERFECT）</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(result, label) in results" :key="label">
-            <th class="fixed-title">{{ label }}</th>
+            <th class="fixed-title has-background-white-ter">{{ label }}</th>
             <td>{{ result.score }}</td>
             <td>{{ result.tolerance }}</td>
           </tr>
@@ -52,44 +52,48 @@
 </div>
 
 <div class="section" id="searchApp">
-  <h1 class="title">■楽曲から探して計算</h1>
-  <div class=" mb-1">
-    <p class="is-size-7">下の表で青文字のノーツ数を押すと、<br>
-      自動で上部のボックスに入力されます</p>
-  </div>
-
-  <div class="field">
-    <div class="control">
-      <input v-model="keyword" class="input" type="text" placeholder="楽曲名を入力（一部でも可）" @input="validateSearchInput">
+  <div class="container">
+    <h1 class="title">■楽曲から探して計算</h1>
+    <div class=" mb-1">
+      <p class="is-size-7">
+        楽曲名入力で自動で絞り込まれます。<br>
+        下の表でノーツ数を押すと、自動で上部のボックスに入力されます</p>
     </div>
-    <p class="help is-danger" v-if="errorMessage">{{ searchError }}</p>
-  </div>
 
-  <div class="scrollable-table" v-if="filteredData.length">
-    <table class="table is-striped is-fullwidth">
-      <thead>
-        <tr>
-          <th v-for="(key, i) in headers" :key="key" :class="i === 0 ? 'fixed-title' : ''">
-            {{ headerLabels[key] || key }}
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(row, i) in filteredData" :key="i">
-          <td v-for="(key, j) in headers" :key="key" :class="j === 0 ? 'fixed-title' : (key.endsWith('_notes') ? 'clickable' : '')" @click="key.endsWith('_notes') && fillNotes(row[key])">
-            {{ key === 'version' ? versionMap[row[key].toString().slice(0, 3) + '00'] || row[key] : row[key] }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <div class="field">
+      <div>
+        <input v-model="keyword" class="input" type="text" placeholder="楽曲名を入力（一部でも可）" @input="validateSearchInput">
+      </div>
+      <p class="help is-danger" v-if="errorMessage">{{ searchError }}</p>
+    </div>
 
-  <p v-else>該当データがありません。</p>
+    <p class="is-size-7">横スクロール可⇒</p>
+    <div class="scrollable-table" v-if="filteredData.length">
+      <table class="table is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th v-for="(key, i) in headers" :key="key" :class="[i === 0 ? 'fixed-title' : 'fixed-header', 'has-background-primary-light']">
+              {{ headerLabels[key] || key }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, i) in filteredData" :key="i">
+            <td v-for="(key, j) in headers" :key="key" :class="j === 0 ? 'fixed-header has-background-white-ter' : (key.endsWith('_notes') ? 'clickable' : '')" @click="key.endsWith('_notes') && fillNotes(row[key])">
+              {{ key === 'version' ? versionMap[row[key].toString().slice(0, 3) + '00'] || row[key] : row[key] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p v-else>該当データがありません。</p>
+  </div>
 </div>
 
 
 <footer>
-  <p>ご意見・ご連絡は <a href="https://twitter.com/your_account" target="_blank" rel="noopener">@your_account</a> まで</p>
+  <p>ご意見・ご連絡は <a href="https://x.com/araburutochigi" target="_blank" rel="noopener">作者Xアカウント</a> まで</p>
   <p>&copy; 2025 Delasco Calc. All rights reserved.</p>
 </footer>
 
@@ -186,7 +190,7 @@
           'lev_bas_notes', 'dx_lev_bas_notes'
         ],
         headerLabels: {
-          title: 'タイトル',
+          title: '楽曲名',
           version: 'バージョン',
           lev_mas: 'MASTER Lv.',
           dx_lev_mas: 'MASTER Lv. DX',

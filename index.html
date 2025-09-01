@@ -3,9 +3,265 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>calc</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <title>簡単でらスコ計算機</title>
 </head>
 <body>
-  test
+<header class="site-header has-background-primary p-3">
+  <div class="container">
+    <h1 class="title is-6 has-text-light">maimai 簡単でらスコ計算機 ver1.0</h1>
+  </div>
+</header>
+
+<div id="calcApp" class="section">
+  <div class="container">
+    <h1 class="title">■ノーツ数から計算</h1>
+    <!-- 入力エリア -->
+    <div class="field">
+      <label class="label">ノーツ数：</label>
+      <div class="note-input-row">
+        <input type="number" class="input" v-model="numNotes" min="1" max="9999" placeholder="例）500" @input="validateInput">
+        <button class="button is-primary" @click="calculate" :disabled="!isValid">計算</button>
+      </div>
+      <p class="help is-danger" v-if="errorMessage">{{ errorMessage }}</p>
+    </div>
+
+    <!-- 結果テーブル -->
+    <div class="scrollable-table mt-5" v-if="Object.keys(results).length">
+      <table class="table is-bordered is-striped is-fullwidth has-text-centered">
+        <thead>
+          <tr>
+            <th class="fixed-title has-background-primary-light"></th>
+            <th class="has-background-primary-light">でらスコ</th>
+            <th class="has-background-primary-light">許容ノーツ数<br>（PERFECT）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(result, label) in results" :key="label">
+            <th class="fixed-title has-background-white-ter">{{ label }}</th>
+            <td>{{ result.score }}</td>
+            <td>{{ result.tolerance }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" id="searchApp">
+  <div class="container">
+    <h1 class="title">■楽曲から探して計算</h1>
+    <div class=" mb-1">
+      <p class="is-size-7">
+        楽曲名入力で自動で絞り込まれます。<br>
+        下の表でノーツ数を押すと、自動で上部のボックスに入力されます</p>
+    </div>
+
+    <div class="field">
+      <div>
+        <input v-model="keyword" class="input" type="text" placeholder="楽曲名を入力（一部でも可）" @input="validateSearchInput">
+      </div>
+      <p class="help is-danger" v-if="errorMessage">{{ searchError }}</p>
+    </div>
+
+    <p class="is-size-7" v-if="filteredData.length > 0">横スクロール可⇒</p>
+    <div class="scrollable-table" v-if="filteredData.length">
+      <table class="table is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th v-for="(key, i) in headers" :key="key" :class="[i === 0 ? 'fixed-title' : 'fixed-header', 'has-background-primary-light']">
+              <span v-html="headerLabels[key] || key"></span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, i) in filteredData" :key="i">
+            <td v-for="(key, j) in headers" :key="key" :class="j === 0 ? 'fixed-header has-background-white-ter' : (key.endsWith('_notes') ? 'clickable' : '')" @click="key.endsWith('_notes') && fillNotes(row[key])">
+              {{ key === 'version' ? versionMap[row[key].toString().slice(0, 3) + '00'] || row[key] : row[key] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p v-else>該当データがありません。</p>
+  </div>
+</div>
+
+
+<footer>
+  <p>当ツールは、非公式ファンメイドツールです。maimai公式とは一切関係ございません。</p>
+  <p>また、当ツールには<a href="https://otoge-db.net/" target="_blank" rel="noopener">OTOGE DB</a>様の取得された楽曲データを使用しています。</p>
+  <br>
+  <p>ご意見・ご連絡は <a href="https://x.com/araburutochigi" target="_blank" rel="noopener">作者Xアカウント</a> まで</p>
+  <p>&copy; 2025 DXScore Calc.</p>
+</footer>
+
+
+<script>
+  //楽曲検索バリデーション
+  function isValidKeyword(input) {
+    const trimmed = input.trim();
+    if (!trimmed) return { valid: false, message: '検索キーワードを入力してください。' };
+    const dangerousPattern = /<script.*?>|<\/script>|['"];]/i;
+    if (dangerousPattern.test(trimmed)) {
+      return { valid: false, message: '不正な文字列が含まれています。' };
+    }
+    return { valid: true, message: '' };
+  }
+
+  //でらスコ計算ロジック
+  const calcAppInstance = Vue.createApp({
+    data() {
+      return {
+        numNotes: null,
+        maxPerNote: 3,
+        precisionLevels: {
+          '理論値': 1.00,
+          '★6': 0.99,
+          '★5': 0.97,
+          '★4': 0.95,
+          '★3': 0.93,
+          '★2': 0.90,
+          '★1': 0.85,
+        },
+        results: {},
+        errorMessage: ''
+      };
+    },
+    computed: {
+      isValid() {
+      const value = Number(this.numNotes);
+      return (
+        this.errorMessage === '' &&
+        Number.isInteger(value) &&
+        value >= 1 &&
+        value <= 9999
+      );
+    }
+  },
+  methods: {
+    validateInput() {
+      const value = Number(this.numNotes);
+      if (
+        isNaN(value) ||
+        !Number.isInteger(value) ||
+        value < 1 ||
+        value > 9999
+      ) {
+        this.errorMessage = '1〜9999の整数を入力してください';
+        this.results = {};
+      } else {
+        this.errorMessage = '';
+      }
+    },
+    calculate() {
+      if (this.errorMessage) return;
+
+      const baseScore = this.numNotes * this.maxPerNote;
+      const resultSet = {};
+
+      for (const [label, rate] of Object.entries(this.precisionLevels)) {
+        const score = Math.ceil(baseScore * rate);
+        const tolerance = Math.ceil(baseScore - score);
+        resultSet[label] = { score, tolerance };
+      }
+
+      this.results = resultSet;
+    }
+  }
+}).mount('#calcApp');
+
+  //楽曲検索ロジック
+  Vue.createApp({
+    data() {
+      return {
+        rawData: [],
+        keyword: '',
+        displayColumns: [
+          'title',
+          'lev_remas_notes',
+          'lev_mas_notes',
+          'lev_exp_notes',
+          'lev_adv_notes',
+          'lev_bas_notes',
+        ],
+        headerLabels: {
+          title: '楽曲名<br><span class="is-size-7">（DX譜面は先頭に【DX】の記載あり）</span>',
+          version: 'バージョン',
+          lev_remas_notes: 'ReMASTER<br>ノーツ数',
+          lev_mas_notes: 'MASTER<br>ノーツ数',
+          lev_exp_notes: 'EXPERT<br>ノーツ数',
+          lev_adv_notes: 'ADVANCE<br>ノーツ数',
+          lev_bas_notes: 'BASIC<br>ノーツ数',
+        },
+        // versionMap: {
+        //   "10000": "maimai",
+        //   "11000": "maimai PLUS",
+        //   "12000": "GreeN",
+        //   "13000": "GreeN PLUS",
+        //   "14000": "ORANGE",
+        //   "15000": "ORANGE PLUS",
+        //   "16000": "PiNK",
+        //   "17000": "PiNK PLUS",
+        //   "18000": "MURASAKi",
+        //   "18500": "MURASAKi PLUS",
+        //   "19000": "MiLK",
+        //   "19500": "MiLK PLUS",
+        //   "19900": "FiNALE",
+        //   "20000": "でらっくす",
+        //   "20500": "でらっくす PLUS",
+        //   "21000": "Splash",
+        //   "21500": "Splash PLUS",
+        //   "22000": "UNiVERSE",
+        //   "22500": "UNiVERSE PLUS",
+        //   "23000": "FESTiVAL",
+        //   "23500": "FESTiVAL PLUS",
+        //   "24000": "BUDDiES",
+        //   "24500": "BUDDiES PLUS",
+        //   "25000": "PRiSM",
+        //   "25500": "PRiSM PLUS"
+        // },
+        searchError: '',
+      };
+    },
+    computed: {
+      headers() {
+        return this.displayColumns;
+      },
+      filteredData() {
+        if (this.searchError) return []; // エラー時は表示しない
+        
+        const kw = this.keyword.toLowerCase();
+        return this.rawData.filter(row =>
+        String(row.title || '').toLowerCase().includes(kw)
+        );
+      }
+    },
+    methods: {
+      validateSearchInput() {
+        const result = isValidKeyword(this.keyword);
+        this.searchError = result.message;
+        return result.valid;
+      },
+      fillNotes(noteCount) {
+        if (noteCount == null || isNaN(Number(noteCount))) return;
+
+        const proxy = calcAppInstance;
+        proxy.numNotes = Number(noteCount);
+        proxy.validateInput();
+      }
+    },
+
+    async mounted() {
+      const res = await fetch("data/music.json");
+      this.rawData = await res.json();
+    }
+  }).mount('#searchApp');
+</script>
+
 </body>
 </html>

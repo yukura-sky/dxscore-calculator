@@ -67,7 +67,7 @@
       <p class="help is-danger" v-if="errorMessage">{{ searchError }}</p>
     </div>
 
-    <p class="is-size-7">横スクロール可⇒</p>
+    <p class="is-size-7" v-if="filteredData.length > 0">横スクロール可⇒</p>
     <div class="scrollable-table" v-if="filteredData.length">
       <table class="table is-striped is-fullwidth">
         <thead>
@@ -183,25 +183,20 @@
         keyword: '',
         displayColumns: [
           'title',
-          'lev_remas_notes', 'dx_lev_remas_notes',
-          'lev_mas_notes', 'dx_lev_mas_notes',
-          'lev_exp_notes', 'dx_lev_exp_notes',
-          'lev_adv_notes', 'dx_lev_adv_notes',
-          'lev_bas_notes', 'dx_lev_bas_notes'
+          'lev_remas_notes',
+          'lev_mas_notes',
+          'lev_exp_notes',
+          'lev_adv_notes',
+          'lev_bas_notes',
         ],
         headerLabels: {
-          title: '楽曲名',
+          title: '楽曲名<br><span class="is-size-7">（DX譜面は先頭に【DX】の記載あり）</span>',
           version: 'バージョン',
           lev_remas_notes: 'ReMASTER<br>ノーツ数',
-          dx_lev_remas_notes: 'ReMASTER<br>ノーツ数 DX',
           lev_mas_notes: 'MASTER<br>ノーツ数',
-          dx_lev_mas_notes: 'MASTER<br>ノーツ数 DX',
           lev_exp_notes: 'EXPERT<br>ノーツ数',
-          dx_lev_exp_notes: 'EXPERT<br>ノーツ数 DX',
           lev_adv_notes: 'ADVANCE<br>ノーツ数',
-          dx_lev_adv_notes: 'ADVANCE<br>ノーツ数 DX',
           lev_bas_notes: 'BASIC<br>ノーツ数',
-          dx_lev_bas_notes: 'BASIC<br>ノーツ数 DX'
         },
         // versionMap: {
         //   "10000": "maimai",
@@ -242,9 +237,7 @@
         
         const kw = this.keyword.toLowerCase();
         return this.rawData.filter(row =>
-          Object.values(row).some(val =>
-            String(val).toLowerCase().includes(kw)
-          )
+        String(row.title || '').toLowerCase().includes(kw)
         );
       }
     },
@@ -264,7 +257,7 @@
     },
 
     async mounted() {
-      const res = await fetch("data/music-ex.json");
+      const res = await fetch("data/music.json");
       this.rawData = await res.json();
     }
   }).mount('#searchApp');
